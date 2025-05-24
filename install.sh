@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-REPO="https://github.com/<user>/<repo>.git"
+REPO="https://github.com/DavidCks/kanban.git"
 APP_NAME="kanban"
 INSTALL_DIR="/usr/local/bin"
 
