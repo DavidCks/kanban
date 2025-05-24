@@ -1,0 +1,59 @@
+{
+  "title": "Kanban",
+  "cols": [
+    {
+      "title": "Bugs",
+      "tasks": [],
+      "id": "c6da4109-575a-4d86-a50a-b8e6622b056a",
+      "color": "#eb144c"
+    },
+    {
+      "title": "To-Do",
+      "tasks": [
+        {
+          "text": "aaab",
+          "id": "e2a74f6d-a473-4b06-b4ae-c8c8602917ae"
+        },
+        {
+          "text": "AA",
+          "id": "2482bfc1-04f5-48d7-b23c-48fba1322c1d"
+        }
+      ],
+      "id": "6beb54df-5e6e-4d18-ba7c-ead2a7c69538",
+      "color": "#fcb900"
+    },
+    {
+      "title": "Doing",
+      "tasks": [
+        {
+          "text": "aaa",
+          "id": "cbbeb0b0-e5a4-42f1-8b94-947d7f55e7b2"
+        },
+        {
+          "text": "aaaaa",
+          "id": "46546555-400c-4161-b5f4-36ef5bb66566"
+        },
+        {
+          "text": "Edit Lea into something better",
+          "id": "d47efe41-5f09-4810-a6cc-760ee73dabb5"
+        }
+      ],
+      "id": "4a7ea86b-12ae-47cc-83ce-36fe0b7889a7",
+      "color": "#0693e3"
+    },
+    {
+      "title": "Done",
+      "tasks": [
+        {
+          "text": "Hi",
+          "id": "63c35d6f-253f-416d-83d1-84b878686494"
+        }
+      ],
+      "id": "c7f98111-0b13-4e8d-b915-40a905cb0c0d",
+      "color": "#00d084"
+    }
+  ],
+  "autosave": true,
+  "save_to_file": true,
+  "timestamp": 1748067864371
+}
