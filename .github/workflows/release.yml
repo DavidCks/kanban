@@ -1,57 +1,61 @@
-name: Build and Release
+name: Build and Release Binaries
 
 on:
   push:
     tags:
-      - "v*" # Triggers on version tags like v1.0.0
+      - "v*"
 
 jobs:
   build:
-    name: Build Binaries
+    name: Build Binaries (${{ matrix.target }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
         target:
-          [x86_64-unknown-linux-gnu, x86_64-apple-darwin, x86_64-pc-windows-gnu]
+          - x86_64-unknown-linux-gnu
+          - x86_64-apple-darwin
+          - x86_64-pc-windows-gnu
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: ${{ matrix.target }}
-          override: true
+      - name: Install Rust target
+        run: rustup target add ${{ matrix.target }}
 
       - name: Build binary
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Rename and package
+      - name: Rename and prepare binary
         run: |
           mkdir -p dist
-          cp target/${{ matrix.target }}/release/kanban dist/kanban-${{ matrix.target }}
+          BIN_NAME="kanban"
+          case "${{ matrix.target }}" in
+            *windows*) BIN_NAME="kanban.exe" ;;
+          esac
+          cp target/${{ matrix.target }}/release/$BIN_NAME dist/${{ BIN_NAME }}-${{ matrix.target }}
 
-      - uses: actions/upload-artifact@v3
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
         with:
-          name: kanban-${{ matrix.target }}
-          path: dist/kanban-${{ matrix.target }}
+          name: ${{ matrix.target }}-binary
+          path: dist/*
 
   release:
     name: Create GitHub Release
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Download all artifacts
+      - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
-          path: dist
+          path: artifacts
 
-      - name: Publish Release
+      - name: Create release
         uses: softprops/action-gh-release@v1
         with:
-          files: dist/**/kanban-*
+          files: artifacts/**/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
