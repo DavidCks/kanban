@@ -1,56 +1,38 @@
-name: Release
+name: Build Linux .deb
 
 on:
   push:
     tags:
-      - "v*"
+      - "v*" # Matches tags like v1.0.0
 
 jobs:
-  release:
-    name: Build and Package
+  build:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - target: x86_64-pc-windows-gnu
-            os: windows
-            ext: .exe
-            deps: sudo apt-get update && sudo apt-get install -y gcc-mingw-w64-x86-64
-          - target: x86_64-unknown-linux-gnu
-            os: linux
-            ext:
-            deps: sudo apt-get update && sudo apt-get install -y debhelper dh-make devscripts fakeroot
-          - target: x86_64-apple-darwin
-            os: macos
-            ext:
-            deps: |
-
     steps:
       - uses: actions/checkout@v3
 
-      # Install Rust and target
-      - name: Install Rust toolchain
+      # Install build tools
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            debhelper dh-make \
+            devscripts fakeroot
+
+      # Install Rust
+      - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: stable
-          target: ${{ matrix.target }}
           override: true
 
-      # Install target-specific dependencies
-      - name: Install dependencies
-        if: matrix.deps
-        run: ${{ matrix.deps }}
-
-      # Build the release binary
+      # Build release binary
       - name: Build
-        run: |
-          cargo build --release --target ${{ matrix.target }}
-          # For workspaces, specify the package to build
-          # cargo build --release --target ${{ matrix.target }} -p your-package-name
+        run: cargo build --release
 
-      # Get version from tag
+      # Get version from tag (removes 'v' prefix if present)
       - name: Get version
         id: get_version
         run: |
@@ -58,13 +40,13 @@ jobs:
           VERSION="${TAG_VERSION#v}"
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
-      # Package for Linux (.deb)
-      - name: Create .deb package (Linux only)
-        if: matrix.os == 'linux'
+      # Create .deb package
+      - name: Create Debian package
         run: |
-          BINARY_NAME="kanban"  # Replace with your binary name
+          BINARY_NAME="kanban"  # CHANGE THIS to your binary name from Cargo.toml
           mkdir -p debian/usr/bin
-          cp target/${{ matrix.target }}/release/$BINARY_NAME debian/usr/bin/
+          cp target/release/$BINARY_NAME debian/usr/bin/
+
           mkdir -p debian/DEBIAN
           cat > debian/DEBIAN/control <<EOF
           Package: $BINARY_NAME
@@ -72,27 +54,16 @@ jobs:
           Section: utils
           Priority: optional
           Architecture: amd64
-          Maintainer: Your Name <your.email@example.com>
-          Description: Kanban board application
+          Maintainer: Your Name <your@email.com>
+          Description: Your application description
           EOF
+
           dpkg-deb --build debian ${BINARY_NAME}_${{ steps.get_version.outputs.version }}_amd64.deb
 
-      # Prepare artifacts
-      - name: Prepare artifacts
-        run: |
-          BINARY_NAME="kanban"  # Replace with your binary name
-          mkdir -p artifacts
-          if [ "${{ matrix.os }}" = "linux" ]; then
-            cp ${BINARY_NAME}_${{ steps.get_version.outputs.version }}_amd64.deb artifacts/
-          fi
-          cp target/${{ matrix.target }}/release/$BINARY_NAME${{ matrix.ext }} \
-             artifacts/${BINARY_NAME}-${{ matrix.target }}${{ matrix.ext }}
-
-      # Create release and upload artifacts
-      - name: Upload release assets
-        uses: softprops/action-gh-release@v1
+      # Upload artifact
+      - name: Upload .deb package
+        uses: actions/upload-artifact@v3
         with:
-          files: |
-            artifacts/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: package
+          path: |
+            *.deb
