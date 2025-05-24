@@ -11,7 +11,7 @@ A terminal-based Kanban board manager with colorful UI, built in Rust.
   - Add, edit, move, and delete tasks
   - View tasks by column or all at once
 - :package: **Easy installation** with a single script
-- compatible with (vscode kanban)[https://marketplace.visualstudio.com/items?itemName=lbauskar.kanban&ssr=false#overview]
+- compatible with [vscode kanban](https://marketplace.visualstudio.com/items?itemName=lbauskar.kanban&ssr=false#overview)
 
 ## Installation :computer:
 
