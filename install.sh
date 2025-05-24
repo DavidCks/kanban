@@ -22,4 +22,4 @@ echo "🚀 Installing to $INSTALL_DIR..."
 sudo cp "target/release/$APP_NAME" "$INSTALL_DIR"
 
 echo "✅ Installed $APP_NAME to $INSTALL_DIR"
-"$APP_NAME" --help || echo "Run '$APP_NAME' to get started!"
+echo "Run '$APP_NAME' to get started!"

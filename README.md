@@ -15,7 +15,10 @@ A terminal-based Kanban board manager with colorful UI, built in Rust.
 
 ## Installation :computer:
 
-### Quick Install (Linux/macOS)
+### Quick Install (Linux/macOS) (requires rust & git)
+
+⚠️ Make sure you have `cargo` and `git` on your system
+
 ```bash
 curl -sSL https://raw.githubusercontent.com/DavidCks/kanban/main/install.sh | bash
 ```
