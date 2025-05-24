@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - "v*" # Matches tags like v1.0.0
+      - "v*"
 
 jobs:
   release:
@@ -16,18 +16,21 @@ jobs:
           - target: x86_64-pc-windows-gnu
             os: windows
             ext: .exe
-          - target: x86_64-unknown-linux-gnu # Changed from musl for .deb compatibility
+            deps: sudo apt-get update && sudo apt-get install -y gcc-mingw-w64-x86-64
+          - target: x86_64-unknown-linux-gnu
             os: linux
             ext:
+            deps: sudo apt-get update && sudo apt-get install -y debhelper dh-make devscripts fakeroot
           - target: x86_64-apple-darwin
             os: macos
             ext:
+            deps: |
 
     steps:
       - uses: actions/checkout@v3
 
       # Install Rust and target
-      - name: Install Rust
+      - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -35,16 +38,17 @@ jobs:
           target: ${{ matrix.target }}
           override: true
 
-      # Install Linux dependencies for .deb creation
-      - name: Install deb dependencies
-        if: matrix.os == 'linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y debhelper dh-make devscripts fakeroot
+      # Install target-specific dependencies
+      - name: Install dependencies
+        if: matrix.deps
+        run: ${{ matrix.deps }}
 
       # Build the release binary
       - name: Build
-        run: cargo build --release --target ${{ matrix.target }}
+        run: |
+          cargo build --release --target ${{ matrix.target }}
+          # For workspaces, specify the package to build
+          # cargo build --release --target ${{ matrix.target }} -p your-package-name
 
       # Get version from tag
       - name: Get version
@@ -55,31 +59,34 @@ jobs:
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
       # Package for Linux (.deb)
-      - name: Create .deb package
+      - name: Create .deb package (Linux only)
         if: matrix.os == 'linux'
         run: |
+          BINARY_NAME="kanban"  # Replace with your binary name
           mkdir -p debian/usr/bin
-          cp target/${{ matrix.target }}/release/your-binary-name debian/usr/bin/
+          cp target/${{ matrix.target }}/release/$BINARY_NAME debian/usr/bin/
           mkdir -p debian/DEBIAN
           cat > debian/DEBIAN/control <<EOF
-          Package: your-binary-name
+          Package: $BINARY_NAME
           Version: ${{ steps.get_version.outputs.version }}
           Section: utils
           Priority: optional
           Architecture: amd64
           Maintainer: Your Name <your.email@example.com>
-          Description: Your application description
+          Description: Kanban board application
           EOF
-          dpkg-deb --build debian your-binary-name_${{ steps.get_version.outputs.version }}_amd64.deb
+          dpkg-deb --build debian ${BINARY_NAME}_${{ steps.get_version.outputs.version }}_amd64.deb
 
       # Prepare artifacts
       - name: Prepare artifacts
         run: |
-          mkdir artifacts
+          BINARY_NAME="kanban"  # Replace with your binary name
+          mkdir -p artifacts
           if [ "${{ matrix.os }}" = "linux" ]; then
-            cp your-binary-name_${{ steps.get_version.outputs.version }}_amd64.deb artifacts/
+            cp ${BINARY_NAME}_${{ steps.get_version.outputs.version }}_amd64.deb artifacts/
           fi
-          cp target/${{ matrix.target }}/release/your-binary-name${{ matrix.ext }} artifacts/your-binary-name-${{ matrix.target }}${{ matrix.ext }}
+          cp target/${{ matrix.target }}/release/$BINARY_NAME${{ matrix.ext }} \
+             artifacts/${BINARY_NAME}-${{ matrix.target }}${{ matrix.ext }}
 
       # Create release and upload artifacts
       - name: Upload release assets
